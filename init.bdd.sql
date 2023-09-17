@@ -30,7 +30,7 @@ CREATE TABLE Chien (
     nom VARCHAR(255) NOT NULL,
     race VARCHAR(255),
     age INT,
-    difficulte INT CHECK (difficulty >= 1 AND difficulty <= 3), -- niveau de difficulté
+    difficulte INT CHECK (difficulte >= 1 AND difficulte <= 3), -- niveau de difficulté
     deleted_at TIMESTAMP  -- Pour le soft delete
 );
 
@@ -47,7 +47,7 @@ CREATE TABLE Creneau (
 CREATE TABLE Activite (
     id SERIAL PRIMARY KEY,
     nom VARCHAR(100) NOT NULL,
-    description VARCHAR(255) NOT NULL,
+    description VARCHAR(255) NOT NULL
 );
 
 -- Chien and Creneau relation table
@@ -73,4 +73,4 @@ CREATE TABLE Utilisateur_Chien (
 );
 
 -- Insert roles
-INSERT INTO Role(name) VALUES ('super_admin'), ('admin'), ('soigneur'), ('benevole');
+INSERT INTO Role(nom) VALUES ('super_admin'), ('admin'), ('soigneur'), ('benevole');
