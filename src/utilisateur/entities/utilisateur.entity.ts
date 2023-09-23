@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import { Role } from 'src/role/entities/role.entity';
 import { UtilisateurChien } from 'src/utilisateur_chien/entities/utilisateur_chien.entity';
 import {
@@ -29,6 +30,8 @@ export class Utilisateur {
   @Column({ type: 'varchar', length: 255, unique: true })
   email: string;
 
+  // Exclure le mot de passe de la réponse JSON
+  @Exclude()
   @Column({ type: 'varchar', length: 255 })
   mot_de_passe: string;
 

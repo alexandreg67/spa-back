@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { UtilisateurService } from './utilisateur.service';
 import { CreateUtilisateurDto } from './dto/create-utilisateur.dto';
@@ -15,6 +16,10 @@ import { StatutUtilisateur, Utilisateur } from './entities/utilisateur.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ChangeStatusDto } from './dto/change-status.dto';
+import { instanceToPlain } from 'class-transformer';
+import { JwtAuthGuard } from 'src/guard/jwt-auth.guard';
+import { RolesGuard } from 'src/guard/roles.guard';
+import { Roles } from 'src/guard/roles.decorator';
 
 @Controller('utilisateur')
 export class UtilisateurController {
@@ -36,7 +41,8 @@ export class UtilisateurController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.utilisateurService.findOne(+id);
+    const user = this.utilisateurService.findOne(+id);
+    return instanceToPlain(user);
   }
 
   @Get('en-attente')
@@ -60,6 +66,8 @@ export class UtilisateurController {
     return this.utilisateurService.remove(+id);
   }
 
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('superadmin')
   @Patch(':id/status')
   async changeUserStatus(
     @Param('id', ParseIntPipe) id: number,
