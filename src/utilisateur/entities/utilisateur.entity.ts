@@ -10,6 +10,11 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
+export enum StatutUtilisateur {
+  EN_ATTENTE = 'en_attente',
+  APPROUVE = 'approuve',
+  REJETE = 'rejete',
+}
 @Entity('utilisateur')
 export class Utilisateur {
   @PrimaryGeneratedColumn()
@@ -30,8 +35,12 @@ export class Utilisateur {
   @Column({ type: 'varchar', length: 20, nullable: true })
   telephone: string;
 
-  @Column({ type: 'varchar', length: 50, default: 'en_attente' })
-  status: string;
+  @Column({
+    type: 'enum',
+    enum: StatutUtilisateur,
+    default: StatutUtilisateur.EN_ATTENTE,
+  })
+  status: StatutUtilisateur;
 
   @CreateDateColumn({ type: 'timestamp' })
   date_inscription: Date;
