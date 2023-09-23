@@ -8,6 +8,8 @@ import { RoleModule } from './role/role.module';
 import { ChienModule } from './chien/chien.module';
 import { CreneauModule } from './creneau/creneau.module';
 import { ActiviteModule } from './activite/activite.module';
+import { AuthModule } from './auth/auth/auth.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -29,6 +31,7 @@ import { ActiviteModule } from './activite/activite.module';
     ChienModule,
     CreneauModule,
     ActiviteModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -8,6 +8,11 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
+export enum CreneauStatus {
+  LIBRE = 'libre',
+  RESERVE = 'reserve',
+  COMPLET = 'complet',
+}
 @Entity('Creneau')
 export class Creneau {
   @PrimaryGeneratedColumn()
@@ -19,8 +24,12 @@ export class Creneau {
   @Column('timestamp')
   date_fin: Date;
 
-  @Column({ default: 'libre' })
-  status: string;
+  @Column({
+    type: 'enum',
+    enum: CreneauStatus,
+    default: CreneauStatus.LIBRE,
+  })
+  status: CreneauStatus;
 
   @Column({ type: 'timestamp', nullable: true })
   deleted_at: Date;

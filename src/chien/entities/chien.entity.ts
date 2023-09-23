@@ -9,6 +9,12 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
+export enum DifficulteChien {
+  FACILE = 1,
+  MOYEN = 2,
+  DIFFICILE = 3,
+}
+
 @Entity('Chien')
 export class Chien {
   @PrimaryGeneratedColumn()
@@ -23,8 +29,11 @@ export class Chien {
   @Column({ nullable: true })
   age: number;
 
-  @Column({ type: 'int' })
-  difficulte: number;
+  @Column({
+    type: 'enum',
+    enum: DifficulteChien,
+  })
+  difficulte: DifficulteChien;
 
   @Column({ type: 'timestamp', nullable: true })
   deleted_at: Date;
