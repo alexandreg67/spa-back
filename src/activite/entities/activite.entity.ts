@@ -1,7 +1,7 @@
 import { Creneau } from 'src/creneau/entities/creneau.entity';
 import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('Activite')
+@Entity('activite')
 export class Activite {
   @PrimaryGeneratedColumn()
   id: number;

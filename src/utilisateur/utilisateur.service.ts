@@ -23,4 +23,12 @@ export class UtilisateurService {
   remove(id: number) {
     return `This action removes a #${id} utilisateur`;
   }
+
+  getUsersInAttente() {
+    return `This action returns all users in attente`;
+  }
+
+  approveUser(id: number) {
+    return `This action approves a #${id} utilisateur`;
+  }
 }

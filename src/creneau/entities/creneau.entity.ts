@@ -13,7 +13,7 @@ export enum CreneauStatus {
   RESERVE = 'reserve',
   COMPLET = 'complet',
 }
-@Entity('Creneau')
+@Entity('creneau')
 export class Creneau {
   @PrimaryGeneratedColumn()
   id: number;
@@ -39,7 +39,7 @@ export class Creneau {
 
   @ManyToMany(() => Activite)
   @JoinTable({
-    name: 'Creneau_Activite',
+    name: 'creneau_Activite',
     joinColumn: { name: 'creneau_id', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'activite_id', referencedColumnName: 'id' },
   })

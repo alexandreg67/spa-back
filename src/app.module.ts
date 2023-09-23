@@ -8,8 +8,10 @@ import { RoleModule } from './role/role.module';
 import { ChienModule } from './chien/chien.module';
 import { CreneauModule } from './creneau/creneau.module';
 import { ActiviteModule } from './activite/activite.module';
-import { AuthModule } from './auth/auth/auth.module';
 import { AuthModule } from './auth/auth.module';
+import { RolesGuard } from './guard-roles/roles.guard';
+import { APP_GUARD } from '@nestjs/core';
+import { UtilisateurChienModule } from './utilisateur_chien/utilisateur-chien.module';
 
 @Module({
   imports: [
@@ -23,7 +25,7 @@ import { AuthModule } from './auth/auth.module';
       username: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
-      entities: [],
+      autoLoadEntities: true,
       synchronize: false,
     }),
     UtilisateurModule,
@@ -32,8 +34,15 @@ import { AuthModule } from './auth/auth.module';
     CreneauModule,
     ActiviteModule,
     AuthModule,
+    UtilisateurChienModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
 })
 export class AppModule {}

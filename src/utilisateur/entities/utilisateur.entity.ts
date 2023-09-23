@@ -10,7 +10,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-@Entity('Utilisateur')
+@Entity('utilisateur')
 export class Utilisateur {
   @PrimaryGeneratedColumn()
   id: number;
@@ -39,9 +39,9 @@ export class Utilisateur {
   @Column({ type: 'timestamp', nullable: true })
   deleted_at: Date;
 
-  @ManyToMany(() => Role)
+  @ManyToMany(() => Role, { eager: true })
   @JoinTable({
-    name: 'Utilisateur_Role',
+    name: 'utilisateur_role',
     joinColumn: {
       name: 'user_id',
       referencedColumnName: 'id',

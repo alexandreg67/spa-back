@@ -15,7 +15,7 @@ export enum DifficulteChien {
   DIFFICILE = 3,
 }
 
-@Entity('Chien')
+@Entity('chien')
 export class Chien {
   @PrimaryGeneratedColumn()
   id: number;
@@ -40,7 +40,7 @@ export class Chien {
 
   @ManyToMany(() => Creneau)
   @JoinTable({
-    name: 'Chien_Creneau',
+    name: 'chien_creneau',
     joinColumn: { name: 'chien_id', referencedColumnName: 'id' },
     inverseJoinColumn: { name: 'creneau_id', referencedColumnName: 'id' },
   })

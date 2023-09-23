@@ -1,33 +1,127 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { Utilisateur } from 'src/utilisateur/entities/utilisateur.entity';
 import { LoginDto } from './dto/login.dto';
+import { SignupDto } from './dto/signup.dto';
+import { Role } from 'src/role/entities/role.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(Utilisateur)
-    private userRepository: Repository<Utilisateur>,
+    private utilisateurRepository: Repository<Utilisateur>,
+    @InjectRepository(Role)
+    private roleRepository: Repository<Role>,
     private jwtService: JwtService,
   ) {}
 
   async login(loginDto: LoginDto) {
     const { email, mot_de_passe } = loginDto;
-    const user = await this.userRepository.findOne({ where: { email } });
+    const user = await this.utilisateurRepository.findOneBy({ email });
 
     if (!user) {
       throw new UnauthorizedException('Identifiants incorrects');
     }
 
     if (await bcrypt.compare(mot_de_passe, user.mot_de_passe)) {
-      const payload = { email: user.email, userId: user.id };
-      const accessToken = await this.jwtService.sign(payload);
+      const payload = {
+        mail: user.email,
+        userId: user.id,
+        roles: user.roles.map((role) => role.nom),
+      };
+      const accessToken = this.jwtService.sign(payload);
       return { accessToken };
     } else {
       throw new UnauthorizedException('Identifiants incorrects');
     }
+  }
+
+  async signUp(signupDto: SignupDto): Promise<any> {
+    const { nom, prenom, email, telephone, mot_de_passe } = signupDto;
+
+    // Hasher le mot de passe
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(mot_de_passe, salt);
+
+    // Créer un nouvel utilisateur
+    const newUser = this.utilisateurRepository.create({
+      nom,
+      prenom,
+      email,
+      telephone,
+      mot_de_passe: hashedPassword,
+    });
+
+    // Vérifiez si l'utilisateur existe déjà dans la base de données
+    const userExists = await this.utilisateurRepository.findOneBy({ email });
+    if (userExists) {
+      throw new ConflictException('Cet email est déjà utilisé');
+    }
+
+    await this.utilisateurRepository.save(newUser);
+
+    // Ici, vous pouvez également renvoyer un token JWT pour que l'utilisateur soit connecté directement
+    // Sinon, renvoyez une confirmation ou les données de l'utilisateur
+    return { message: 'Inscription réussie' };
+  }
+
+  async getUsersInAttente(): Promise<Utilisateur[]> {
+    // Récupérer tous les utilisateurs en attente
+    return this.utilisateurRepository.find({ where: { status: 'en_attente' } });
+  }
+
+  async approveUser(id: number): Promise<Utilisateur> {
+    // Approuver un utilisateur
+    const user = await this.utilisateurRepository.findOneBy({ id });
+    if (!user) {
+      throw new NotFoundException('Utilisateur non trouvé');
+    }
+    // Changer le statut de l'utilisateur en actif
+    user.status = 'actif';
+    return this.utilisateurRepository.save(user);
+  }
+
+  async createSuperAdmin(signupDto: SignupDto): Promise<any> {
+    const { nom, prenom, email, telephone, mot_de_passe } = signupDto;
+
+    // Hasher le mot de passe
+    const salt = await bcrypt.genSalt();
+    const hashedPassword = await bcrypt.hash(mot_de_passe, salt);
+
+    // Créer un nouvel utilisateur
+    const newUser = this.utilisateurRepository.create({
+      nom,
+      prenom,
+      email,
+      telephone,
+      mot_de_passe: hashedPassword,
+    });
+
+    // Vérifiez si l'utilisateur existe déjà dans la base de données
+    const userExists = await this.utilisateurRepository.findOneBy({ email });
+    if (userExists) {
+      throw new ConflictException('Cet email est déjà utilisé');
+    }
+
+    // Hardcoder le rôle en tant que "SuperAdmin"
+    const superAdminRole = await this.roleRepository.findOneBy({
+      nom: 'superadmin',
+    });
+
+    if (!superAdminRole) {
+      throw new NotFoundException('Rôle SuperAdmin introuvable');
+    }
+
+    newUser.roles = [superAdminRole]; // Ajoutez le rôle SuperAdmin à l'utilisateur
+    await this.utilisateurRepository.save(newUser);
+    return { message: 'SuperAdmin créé avec succès' };
   }
 }
