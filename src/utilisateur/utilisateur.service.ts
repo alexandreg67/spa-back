@@ -1,11 +1,17 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { CreateUtilisateurDto } from './dto/create-utilisateur.dto';
 import { UpdateUtilisateurDto } from './dto/update-utilisateur.dto';
-import { StatutUtilisateur, Utilisateur } from './entities/utilisateur.entity';
+import {
+  StatutUtilisateur,
+  UserRole,
+  Utilisateur,
+} from './entities/utilisateur.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SignupDto } from 'src/auth/dto/signup.dto';
@@ -17,7 +23,7 @@ export class UtilisateurService {
   constructor(
     @InjectRepository(Utilisateur)
     private utilisateurRepository: Repository<Utilisateur>,
-    @InjectRepository(Utilisateur)
+    @InjectRepository(Role)
     private roleRepository: Repository<Role>,
   ) {}
   create(createUtilisateurDto: CreateUtilisateurDto) {
@@ -63,6 +69,51 @@ export class UtilisateurService {
     return this.utilisateurRepository.save(user);
   }
 
+  async updateRoles(id: number, roles: UserRole[]): Promise<Utilisateur> {
+    // Récupérer l'utilisateur
+    const user = await this.utilisateurRepository.findOne({
+      where: { id: id },
+      relations: ['roles'],
+    });
+
+    if (!user) throw new NotFoundException('Utilisateur non trouvé');
+    if (roles.length === 0)
+      throw new BadRequestException('Au moins un rôle doit être attribué');
+
+    // Vérification si les roles sont bien un tableau
+    if (!Array.isArray(roles)) {
+      throw new BadRequestException('Roles doit être un tableau');
+    }
+
+    // Vérification si les roles sont valides
+    const newRoles = await Promise.all(
+      // Pour chaque role, on vérifie s'il existe dans la base de données
+      roles.map(async (roleEnumValue) => {
+        const role = await this.roleRepository.findOne({
+          where: { nom: roleEnumValue },
+        });
+
+        if (!role) {
+          throw new NotFoundException(
+            `Role ${roleEnumValue} n'existe pas dans la base de données`,
+          );
+        }
+        return role;
+      }),
+    );
+    // On remplace les anciens roles par les nouveaux
+    user.roles = newRoles;
+
+    // On sauvegarde l'utilisateur
+    try {
+      await this.utilisateurRepository.save(user);
+    } catch (error) {
+      console.error('Error saving user:', error);
+      throw new InternalServerErrorException('Error saving user');
+    }
+    return user;
+  }
+
   async createSuperAdmin(signupDto: SignupDto): Promise<any> {
     const { nom, prenom, email, telephone, mot_de_passe } = signupDto;
 
@@ -86,15 +137,15 @@ export class UtilisateurService {
     }
 
     // Hardcoder le rôle en tant que "SuperAdmin"
-    const superAdminRole = await this.roleRepository.findOneBy({
-      nom: 'superadmin',
+    const superAdminRole = await this.roleRepository.findOne({
+      where: { nom: 'superadmin' },
     });
 
     if (!superAdminRole) {
       throw new NotFoundException('Rôle SuperAdmin introuvable');
     }
-
-    newUser.roles = [superAdminRole]; // Ajoutez le rôle SuperAdmin à l'utilisateur
+    // Ajoutez le rôle SuperAdmin à l'utilisateur
+    newUser.roles = [superAdminRole];
     await this.utilisateurRepository.save(newUser);
     return { message: 'SuperAdmin créé avec succès' };
   }

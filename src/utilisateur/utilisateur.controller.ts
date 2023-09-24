@@ -12,13 +12,18 @@ import {
 import { UtilisateurService } from './utilisateur.service';
 import { CreateUtilisateurDto } from './dto/create-utilisateur.dto';
 import { UpdateUtilisateurDto } from './dto/update-utilisateur.dto';
-import { StatutUtilisateur, Utilisateur } from './entities/utilisateur.entity';
+import {
+  StatutUtilisateur,
+  UserRole,
+  Utilisateur,
+} from './entities/utilisateur.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ChangeStatusDto } from './dto/change-status.dto';
 import { instanceToPlain } from 'class-transformer';
 import { JwtAuthGuard } from 'src/guard/jwt-auth.guard';
 import { Roles } from 'src/guard/roles.decorator';
+import { UpdateRoleDto } from 'src/role/dto/update-role.dto';
 @Controller('utilisateur')
 export class UtilisateurController {
   constructor(
@@ -71,5 +76,21 @@ export class UtilisateurController {
     @Body() changeStatusDto: ChangeStatusDto,
   ) {
     return this.utilisateurService.changeUserStatus(id, changeStatusDto.status);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Roles('superadmin')
+  @Patch(':id/roles')
+  async updateRoles(
+    @Param('id') id: number,
+    @Body() updateRolesDto: UpdateRoleDto,
+  ) {
+    console.log('controller updateRoles', updateRolesDto);
+    return this.utilisateurService.updateRoles(id, updateRolesDto.roles);
+  }
+
+  @Post('/create-superadmin')
+  async createSuperAdmin(@Body() createUtilisateurDto: CreateUtilisateurDto) {
+    return this.utilisateurService.createSuperAdmin(createUtilisateurDto);
   }
 }

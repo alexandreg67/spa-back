@@ -64,8 +64,8 @@ export class AuthService {
 
     await this.utilisateurRepository.save(newUser);
 
-    // Ici, vous pouvez également renvoyer un token JWT pour que l'utilisateur soit connecté directement
-    // Sinon, renvoyez une confirmation ou les données de l'utilisateur
+    // Ici, on peut renvoyer un token JWT pour que l'utilisateur soit connecté directement
+    // On peut aussi renvoyez une confirmation ou les données de l'utilisateur
     return { message: 'Inscription réussie' };
   }
 }

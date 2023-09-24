@@ -16,6 +16,13 @@ export enum StatutUtilisateur {
   APPROUVE = 'approuve',
   REJETE = 'rejete',
 }
+
+export enum UserRole {
+  SUPERADMIN = 'superadmin',
+  ADMIN = 'admin',
+  SOIGNEUR = 'soigneur',
+  BENEVOLE = 'bénévole',
+}
 @Entity('utilisateur')
 export class Utilisateur {
   @PrimaryGeneratedColumn()
