@@ -10,15 +10,12 @@ import { JwtService } from '@nestjs/jwt';
 import { Utilisateur } from 'src/utilisateur/entities/utilisateur.entity';
 import { LoginDto } from './dto/login.dto';
 import { SignupDto } from './dto/signup.dto';
-import { Role } from 'src/role/entities/role.entity';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(Utilisateur)
     private utilisateurRepository: Repository<Utilisateur>,
-    @InjectRepository(Role)
-    private roleRepository: Repository<Role>,
     private jwtService: JwtService,
   ) {}
 
@@ -32,7 +29,7 @@ export class AuthService {
 
     if (await bcrypt.compare(mot_de_passe, user.mot_de_passe)) {
       const payload = {
-        mail: user.email,
+        email: user.email,
         userId: user.id,
         roles: user.roles.map((role) => role.nom),
       };

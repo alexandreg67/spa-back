@@ -7,10 +7,9 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  // IMPORTANT IL FAUT GARDER CE NOM DE CLASSE
   constructor(
     @InjectRepository(Utilisateur)
-    private userRepository: Repository<Utilisateur>,
+    private utilisateurRepository: Repository<Utilisateur>,
   ) {
     super({
       secretOrKey: process.env.SECRET_JWT,
@@ -21,10 +20,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   // IMPORTANT IL FAUT GARDER CE NOM DE METHODE
   async validate(payload: any): Promise<Utilisateur> {
     console.log('validate');
-    const { email } = payload;
-    const user: Utilisateur = await this.userRepository.findOneBy({ email });
+    console.log('payload', payload);
 
-    if (!user) throw new UnauthorizedException();
-    return user;
+    const { userId } = payload;
+
+    const utilisateur = await this.utilisateurRepository.findOne({
+      where: { id: userId },
+      relations: ['roles'],
+    });
+    console.log('utilisateur', utilisateur);
+
+    if (!utilisateur) throw new UnauthorizedException();
+    return utilisateur;
   }
 }

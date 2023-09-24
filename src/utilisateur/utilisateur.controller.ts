@@ -18,9 +18,7 @@ import { Repository } from 'typeorm';
 import { ChangeStatusDto } from './dto/change-status.dto';
 import { instanceToPlain } from 'class-transformer';
 import { JwtAuthGuard } from 'src/guard/jwt-auth.guard';
-import { RolesGuard } from 'src/guard/roles.guard';
 import { Roles } from 'src/guard/roles.decorator';
-
 @Controller('utilisateur')
 export class UtilisateurController {
   constructor(
@@ -65,8 +63,7 @@ export class UtilisateurController {
   remove(@Param('id') id: string) {
     return this.utilisateurService.remove(+id);
   }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard)
   @Roles('superadmin')
   @Patch(':id/status')
   async changeUserStatus(

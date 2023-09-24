@@ -51,7 +51,7 @@ export class Utilisateur {
   @Column({ type: 'timestamp', nullable: true })
   deleted_at: Date;
 
-  @ManyToMany(() => Role, { eager: true })
+  @ManyToMany(() => Role, (role) => role.users, { eager: true })
   @JoinTable({
     name: 'utilisateur_role',
     joinColumn: {

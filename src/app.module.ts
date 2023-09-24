@@ -9,8 +9,6 @@ import { ChienModule } from './chien/chien.module';
 import { CreneauModule } from './creneau/creneau.module';
 import { ActiviteModule } from './activite/activite.module';
 import { AuthModule } from './auth/auth.module';
-import { RolesGuard } from './guard/roles.guard';
-import { APP_GUARD } from '@nestjs/core';
 import { UtilisateurChienModule } from './utilisateur_chien/utilisateur-chien.module';
 
 @Module({
@@ -37,12 +35,6 @@ import { UtilisateurChienModule } from './utilisateur_chien/utilisateur-chien.mo
     UtilisateurChienModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    },
-  ],
+  providers: [AppService],
 })
 export class AppModule {}

@@ -1,40 +1,61 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ExtractJwt } from 'passport-jwt';
 import { JwtStrategy } from 'src/auth/jwt.strategy';
+import { ExtractJwt } from 'passport-jwt';
+import { JwtService } from '@nestjs/jwt';
+import { Reflector } from '@nestjs/core';
+import { ROLES_KEY } from './roles.decorator';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(private jwtStrategy: JwtStrategy) {}
+  constructor(
+    private jwtStrategy: JwtStrategy,
+    private jwtService: JwtService,
+    private reflector: Reflector,
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // Récupérer la requête
     const request = context.switchToHttp().getRequest();
 
-    // Récupérez le token de la requête.
+    // Récupération du token dans le header de la requête
     const token = ExtractJwt.fromAuthHeaderAsBearerToken()(request);
-
-    // Si aucun token n'est fourni, lancez une exception.
     if (!token) {
       throw new UnauthorizedException('Aucun token fourni');
     }
 
-    // Valider le token avec JwtStrategy
-    const user = await this.jwtStrategy.validate({
-      jwtPayload: { email: token },
-    });
+    // Décodage du token pour obtenir le payload
+    const payload: any = this.jwtService.decode(token);
+    if (!payload || !payload.userId || !Array.isArray(payload.roles)) {
+      throw new UnauthorizedException('Token invalide');
+    }
 
-    // Si le token n'est pas valide, lancez une exception.
+    const user = await this.jwtStrategy.validate({ userId: payload.userId });
     if (!user) {
       throw new UnauthorizedException('Token invalide ou expiré');
     }
 
-    // Attache l'utilisateur décodé à la requête, pour que les prochains gardes ou le gestionnaire puisse l'utiliser.
     request.user = user;
+
+    // Vérification des rôles
+    const rolesRequired = this.reflector.get<string[]>(
+      ROLES_KEY,
+      context.getHandler(),
+    );
+    if (rolesRequired && rolesRequired.length) {
+      const hasRequiredRole = rolesRequired.some((role) =>
+        payload.roles.includes(role),
+      );
+      if (!hasRequiredRole) {
+        throw new ForbiddenException(
+          "Vous n'avez pas les permissions nécessaires pour accéder à cette ressource.",
+        );
+      }
+    }
     return true;
   }
 }
