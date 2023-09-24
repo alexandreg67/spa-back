@@ -57,10 +57,22 @@ export class UtilisateurService {
     id: number,
     newStatus: StatutUtilisateur,
   ): Promise<Utilisateur> {
-    const user = await this.utilisateurRepository.findOneBy({ id });
+    // Récupérer l'utilisateur
+    const user = await this.utilisateurRepository.findOne({
+      where: { id: id },
+      relations: ['roles'],
+    });
 
     if (!user) {
       throw new NotFoundException('Utilisateur non trouvé');
+    }
+
+    if (!user.roles || user.roles.length === 0) {
+      const defaultRole = await this.roleRepository.findOne({
+        where: { nom: UserRole.BENEVOLE },
+      });
+      if (!defaultRole) throw new NotFoundException('Default role not found!');
+      user.roles = [defaultRole];
     }
 
     user.status = newStatus;
