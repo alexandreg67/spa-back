@@ -17,6 +17,8 @@ import { Repository } from 'typeorm';
 import { SignupDto } from 'src/auth/dto/signup.dto';
 import * as bcrypt from 'bcrypt';
 import { Role } from 'src/role/entities/role.entity';
+import { isNotEmpty } from 'class-validator';
+import { isNull } from 'util';
 
 @Injectable()
 export class UtilisateurService {
@@ -54,10 +56,17 @@ export class UtilisateurService {
   }
 
   async getDeletedUsers(): Promise<Utilisateur[]> {
-    return this.utilisateurRepository
+    const users = await this.utilisateurRepository
       .createQueryBuilder('user')
       .where('user.deleted_at IS NOT NULL')
+      .withDeleted()
       .getMany();
+
+    if (!users.length) {
+      throw new NotFoundException('Aucun utilisateur supprimé');
+    }
+
+    return users;
   }
 
   async changeUserStatus(
@@ -149,7 +158,6 @@ export class UtilisateurService {
       where: { id: id },
       withDeleted: true,
     });
-    console.log('restore user', user);
     if (!user) {
       throw new NotFoundException(`Utilisateur avec l'id ${id} non trouvé`);
     }

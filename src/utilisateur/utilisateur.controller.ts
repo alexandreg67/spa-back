@@ -44,18 +44,25 @@ export class UtilisateurController {
 
   @UseGuards(JwtAuthGuard)
   @Roles('admin', 'superadmin')
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    const user = this.utilisateurService.findOne(+id);
-    return instanceToPlain(user);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Roles('admin', 'superadmin')
   @Get('en-attente')
   async getUsersInAttente(): Promise<Utilisateur[]> {
     // Récupérer tous les utilisateurs en attente
     return this.utilisateurService.getUsersInAttente();
+  }
+  @UseGuards(JwtAuthGuard)
+  @Roles('admin', 'superadmin')
+  @Get('supprime')
+  async getDeletedUsers(): Promise<Utilisateur[]> {
+    // Récupérer tous les utilisateurs supprimé
+    return this.utilisateurService.getDeletedUsers();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Roles('admin', 'superadmin')
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    const user = this.utilisateurService.findOne(+id);
+    return instanceToPlain(user);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -73,13 +80,6 @@ export class UtilisateurController {
   @Delete(':id')
   softDeleteUser(@Param('id') id: string) {
     return this.utilisateurService.softDelete(+id);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Roles('admin', 'superadmin')
-  @Get('/deleted-users')
-  async getDeletedUsers(): Promise<Utilisateur[]> {
-    return this.utilisateurService.getDeletedUsers();
   }
 
   @UseGuards(JwtAuthGuard)
