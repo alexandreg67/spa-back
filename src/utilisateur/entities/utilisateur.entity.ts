@@ -4,6 +4,7 @@ import { UtilisateurChien } from 'src/utilisateur_chien/entities/utilisateur_chi
 import {
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinTable,
   ManyToMany,
@@ -15,6 +16,7 @@ export enum StatutUtilisateur {
   EN_ATTENTE = 'en_attente',
   APPROUVE = 'approuve',
   REJETE = 'rejete',
+  SUPPRIME = 'supprime',
 }
 
 export enum UserRole {
@@ -23,6 +25,7 @@ export enum UserRole {
   SOIGNEUR = 'soigneur',
   BENEVOLE = 'bénévole',
 }
+
 @Entity('utilisateur')
 export class Utilisateur {
   @PrimaryGeneratedColumn()
@@ -55,8 +58,11 @@ export class Utilisateur {
   @CreateDateColumn({ type: 'timestamp' })
   date_inscription: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
-  deleted_at: Date;
+  // @Column({ type: 'timestamp', nullable: true })
+  // deleted_at: Date | null;
+
+  @DeleteDateColumn({ type: 'timestamp', nullable: true })
+  deleted_at?: Date;
 
   @ManyToMany(() => Role, (role) => role.users, { eager: true })
   @JoinTable({

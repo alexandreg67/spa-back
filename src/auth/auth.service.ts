@@ -7,7 +7,10 @@ import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
-import { Utilisateur } from 'src/utilisateur/entities/utilisateur.entity';
+import {
+  StatutUtilisateur,
+  Utilisateur,
+} from 'src/utilisateur/entities/utilisateur.entity';
 import { LoginDto } from './dto/login.dto';
 import { SignupDto } from './dto/signup.dto';
 
@@ -23,8 +26,28 @@ export class AuthService {
     const { email, mot_de_passe } = loginDto;
     const user = await this.utilisateurRepository.findOneBy({ email });
 
+    console.log('je suis dans login est je log user : ', user);
+
     if (!user) {
       throw new UnauthorizedException('Identifiants incorrects');
+    }
+
+    if (user.status === StatutUtilisateur.EN_ATTENTE) {
+      console.log(
+        'je suis dans login status = en attente et je log user : ',
+        user,
+      );
+      throw new UnauthorizedException(
+        "Votre compte est en attente d'approbation par un administrateur.",
+      );
+    }
+
+    if (user.status === StatutUtilisateur.SUPPRIME) {
+      console.log(
+        'je suis dans login status = supprime et je log user : ',
+        user,
+      );
+      throw new UnauthorizedException('Votre compte à été supprimé.');
     }
 
     if (await bcrypt.compare(mot_de_passe, user.mot_de_passe)) {
@@ -67,5 +90,20 @@ export class AuthService {
     // Ici, on peut renvoyer un token JWT pour que l'utilisateur soit connecté directement
     // On peut aussi renvoyez une confirmation ou les données de l'utilisateur
     return { message: 'Inscription réussie' };
+  }
+
+  async validateToken(
+    token: string,
+  ): Promise<{ valid: boolean; userId?: number }> {
+    try {
+      const payload = this.jwtService.verify(token); // Vérifie le token et obtient le payload
+      console.log('payload : ', payload);
+      const userId = payload.userId;
+      console.log('je suis dans validateToken userId : ', userId);
+
+      return { valid: true, userId };
+    } catch (error) {
+      return { valid: false };
+    }
   }
 }

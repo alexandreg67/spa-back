@@ -30,7 +30,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
     console.log('utilisateur', utilisateur);
 
-    if (!utilisateur) throw new UnauthorizedException();
+    if (!utilisateur) {
+      throw new UnauthorizedException('Utilisateur non trouvé');
+    }
     return utilisateur;
   }
 }

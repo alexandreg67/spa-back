@@ -31,19 +31,19 @@ export class UtilisateurService {
   }
 
   findAll() {
-    return `This action returns all utilisateur`;
+    return this.utilisateurRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} utilisateur`;
+  async findOne(id: number) {
+    const found = await this.utilisateurRepository.findOneBy({ id });
+    if (!found) {
+      throw new NotFoundException('Utilisateur non trouvé');
+    }
+    return found;
   }
 
   update(id: number, updateUtilisateurDto: UpdateUtilisateurDto) {
     return `This action updates a #${id} utilisateur`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} utilisateur`;
   }
 
   async getUsersInAttente(): Promise<Utilisateur[]> {
@@ -51,6 +51,13 @@ export class UtilisateurService {
     return this.utilisateurRepository.find({
       where: { status: StatutUtilisateur.EN_ATTENTE },
     });
+  }
+
+  async getDeletedUsers(): Promise<Utilisateur[]> {
+    return this.utilisateurRepository
+      .createQueryBuilder('user')
+      .where('user.deleted_at IS NOT NULL')
+      .getMany();
   }
 
   async changeUserStatus(
@@ -85,6 +92,7 @@ export class UtilisateurService {
     // Récupérer l'utilisateur
     const user = await this.utilisateurRepository.findOne({
       where: { id: id },
+      // On récupère les roles de l'utilisateur
       relations: ['roles'],
     });
 
@@ -124,6 +132,30 @@ export class UtilisateurService {
       throw new InternalServerErrorException('Error saving user');
     }
     return user;
+  }
+
+  async softDelete(id: number): Promise<Utilisateur> {
+    const user = await this.utilisateurRepository.findOneBy({ id });
+    console.log('soft delete user', user);
+    if (!user) {
+      throw new NotFoundException(`Utilisateur avec l'id ${id} non trouvé`);
+    }
+    user.status = StatutUtilisateur.SUPPRIME;
+    return this.utilisateurRepository.softRemove(user);
+  }
+
+  async restoreUser(id: number) {
+    const user = await this.utilisateurRepository.findOne({
+      where: { id: id },
+      withDeleted: true,
+    });
+    console.log('restore user', user);
+    if (!user) {
+      throw new NotFoundException(`Utilisateur avec l'id ${id} non trouvé`);
+    }
+    user.deleted_at = null;
+    user.status = StatutUtilisateur.APPROUVE;
+    return await this.utilisateurRepository.save(user);
   }
 
   async createSuperAdmin(signupDto: SignupDto): Promise<any> {

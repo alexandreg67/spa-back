@@ -1,17 +1,32 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
 import { ChienService } from './chien.service';
 import { CreateChienDto } from './dto/create-chien.dto';
 import { UpdateChienDto } from './dto/update-chien.dto';
+import { JwtAuthGuard } from 'src/guard/jwt-auth.guard';
+import { Roles } from 'src/guard/roles.decorator';
 
 @Controller('chien')
 export class ChienController {
   constructor(private readonly chienService: ChienService) {}
 
+  @UseGuards(JwtAuthGuard)
+  @Roles('admin', 'superadmin')
   @Post()
   create(@Body() createChienDto: CreateChienDto) {
     return this.chienService.create(createChienDto);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Roles('superadmin', 'admin', 'soigneur', 'bénévole')
   @Get()
   findAll() {
     return this.chienService.findAll();
@@ -22,6 +37,8 @@ export class ChienController {
     return this.chienService.findOne(+id);
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Roles('admin', 'superadmin')
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateChienDto: UpdateChienDto) {
     return this.chienService.update(+id, updateChienDto);
