@@ -77,6 +77,7 @@ export class AuthService {
       email,
       telephone,
       mot_de_passe: hashedPassword,
+      status: StatutUtilisateur.EN_ATTENTE,
     });
 
     // Vérifiez si l'utilisateur existe déjà dans la base de données

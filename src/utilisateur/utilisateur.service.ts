@@ -17,8 +17,6 @@ import { Repository } from 'typeorm';
 import { SignupDto } from 'src/auth/dto/signup.dto';
 import * as bcrypt from 'bcrypt';
 import { Role } from 'src/role/entities/role.entity';
-import { isNotEmpty } from 'class-validator';
-import { isNull } from 'util';
 
 @Injectable()
 export class UtilisateurService {
@@ -36,16 +34,45 @@ export class UtilisateurService {
     return this.utilisateurRepository.find();
   }
 
-  async findOne(id: number) {
-    const found = await this.utilisateurRepository.findOneBy({ id });
-    if (!found) {
-      throw new NotFoundException('Utilisateur non trouvé');
+  async findOne(id: number, includeSoftDeleted = false) {
+    if (includeSoftDeleted === true) {
+      const deleteUser = this.getDeletedUser(id);
+      return deleteUser;
+    } else {
+      const found = await this.utilisateurRepository.findOneBy({ id });
+      if (!found) {
+        throw new NotFoundException('Utilisateur non trouvé');
+      }
+      return found;
     }
-    return found;
   }
 
-  update(id: number, updateUtilisateurDto: UpdateUtilisateurDto) {
-    return `This action updates a #${id} utilisateur`;
+  async update(
+    id: number,
+    updateUtilisateurDto: UpdateUtilisateurDto,
+  ): Promise<Utilisateur> {
+    const utilisateur = await this.utilisateurRepository.findOneBy({ id });
+
+    if (!utilisateur) {
+      throw new NotFoundException(`Utilisateur #${id} not found`);
+    }
+
+    // Check if the status is different from 'supprime' and reset the date_suppression
+    if (
+      updateUtilisateurDto.status &&
+      updateUtilisateurDto.status !== 'supprime'
+    ) {
+      utilisateur.deleted_at = null;
+    } else if (updateUtilisateurDto.deleted_at) {
+      utilisateur.deleted_at = updateUtilisateurDto.deleted_at;
+    }
+
+    // Assuming that updateUtilisateurDto contains fields that match the Utilisateur entity
+    Object.assign(utilisateur, updateUtilisateurDto);
+
+    await this.utilisateurRepository.save(utilisateur);
+
+    return utilisateur;
   }
 
   async getUsersInAttente(): Promise<Utilisateur[]> {
@@ -67,6 +94,17 @@ export class UtilisateurService {
     }
 
     return users;
+  }
+
+  async getDeletedUser(id: number): Promise<Utilisateur | undefined> {
+    const user = await this.utilisateurRepository
+      .createQueryBuilder('user')
+      .where('user.deleted_at IS NOT NULL')
+      .andWhere('user.id = :id', { id: id })
+      .withDeleted()
+      .getOne();
+
+    return user;
   }
 
   async changeUserStatus(
@@ -143,14 +181,15 @@ export class UtilisateurService {
     return user;
   }
 
-  async softDelete(id: number): Promise<Utilisateur> {
+  async softDelete(id: number) {
     const user = await this.utilisateurRepository.findOneBy({ id });
     console.log('soft delete user', user);
     if (!user) {
       throw new NotFoundException(`Utilisateur avec l'id ${id} non trouvé`);
     }
     user.status = StatutUtilisateur.SUPPRIME;
-    return this.utilisateurRepository.softRemove(user);
+    user.deleted_at = new Date();
+    await this.utilisateurRepository.save(user);
   }
 
   async restoreUser(id: number) {

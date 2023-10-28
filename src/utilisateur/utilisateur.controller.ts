@@ -65,14 +65,13 @@ export class UtilisateurController {
     return instanceToPlain(user);
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Roles('admin')
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
+  @Patch(':id/update')
+  async update(
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateUtilisateurDto: UpdateUtilisateurDto,
   ) {
-    return this.utilisateurService.update(+id, updateUtilisateurDto);
+    console.log('controller update', updateUtilisateurDto);
+    return this.utilisateurService.update(id, updateUtilisateurDto);
   }
 
   @UseGuards(JwtAuthGuard)

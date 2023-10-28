@@ -51,7 +51,6 @@ export class Utilisateur {
   @Column({
     type: 'enum',
     enum: StatutUtilisateur,
-    default: StatutUtilisateur.EN_ATTENTE,
   })
   status: StatutUtilisateur;
 
@@ -83,4 +82,5 @@ export class Utilisateur {
     (utilisateurChien) => utilisateurChien.utilisateur,
   )
   interactionsChien: UtilisateurChien[];
+  date_suppression: null;
 }
